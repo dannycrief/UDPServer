@@ -20,6 +20,7 @@ public class UDPServer {
     private void initializeServer() throws SocketException {
         server = new DatagramSocket();
         server.connect(this.UDPServerAddress, this.UDPServerPort);
+        server.setSoTimeout(40);
         System.out.println("Server listens on: " + server.getLocalPort());
     }
 
