@@ -4,13 +4,22 @@ import java.net.*;
 
 public class UDPServer {
     private DatagramSocket server;
+    private InetAddress UDPServerAddress;
+    private final int UDPServerPort;
 
-    public UDPServer() throws SocketException {
+    public UDPServer(String serverAddress, int serverPort) throws SocketException {
         initializeServer();
+        try {
+            this.UDPServerAddress = InetAddress.getByName(serverAddress);
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+        }
+        this.UDPServerPort = serverPort;
     }
 
     private void initializeServer() throws SocketException {
-        server = new DatagramSocket(25722);
+        server = new DatagramSocket();
+        server.connect(this.UDPServerAddress, this.UDPServerPort);
         System.out.println("Server listens on: " + server.getLocalPort());
     }
 
@@ -23,11 +32,11 @@ public class UDPServer {
         new Thread(() -> {
             InetAddress clientAddress = datagram.getAddress();
             int clientPort = datagram.getPort();
-            String clientRequest = getStringDatagram(datagram.getData(), datagram.getLength());
+            String clientRequest = getStringDatagram(datagram.getData(), datagram.getLength()); // getting info from client
 
             byte[] respBuff = "Ok".getBytes();
 
-            sendToClientUDP(server, respBuff, clientAddress, clientPort);
+            sendToClientUDP(server, respBuff, clientAddress, clientPort); // example of sending to package to client
         }).start();
     }
 
@@ -51,7 +60,7 @@ public class UDPServer {
         DatagramPacket resp = new DatagramPacket(bytesToSend, bytesToSend.length, clientAddress, clientPort);
         try {
             server.send(resp);
-            System.out.println("INFO: I've sent " + new String(bytesToSend));
+            System.out.println("INFO: Sending " + new String(bytesToSend));
         } catch (IOException e) {
             System.out.println("ERROR: Cannot send response to client...");
             e.printStackTrace();
@@ -75,14 +84,6 @@ public class UDPServer {
                 System.out.println("Some error occurs while listen");
                 IOError.printStackTrace();
             }
-        }
-    }
-
-    public static void main(String[] args) {
-        try {
-            new UDPServer().listen();
-        } catch (SocketException e) {
-            System.out.println("Could not set up the server");
         }
     }
 }
